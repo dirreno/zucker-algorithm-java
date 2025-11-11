@@ -3,7 +3,7 @@ package main;
 
 public class Main {
     public static void main(String[] args) {
-        DPFolding folding = new DPFolding(new EnergyModel());
+        DPFolding2 folding = new DPFolding2(new EnergyModel());
 
         String[] sequences = {
             "GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA",
@@ -12,7 +12,7 @@ public class Main {
         };
 
         for (String seq : sequences) {
-            Result result = folding.recurrence(seq);
+            Result result = folding.fold(seq);
             System.out.println("Sequence : " + seq);
             System.out.println(result);
             System.out.println();

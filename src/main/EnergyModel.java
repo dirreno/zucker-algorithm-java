@@ -5,17 +5,17 @@ import java.util.Map;
 
 public class EnergyModel {
     private static final double INF = 1e9;
+    
+    public double multiInit() { return 2.0; }      // a
+    public double multiBranch() { return 0.1; }    // b
+    public double multiUnpaired() { return 0.1; }  // c
+
 
     private final Map<String, Double> helixTerminal = new HashMap<>();
     private final Map<Integer, Double> hairpinEnergy = new HashMap<>();
-    private final Map<Integer, Double> bulgeEnergy = new HashMap<>();
+    private final Map<Integer, Double> internalLoopEnergy = new HashMap<>();
 
     public EnergyModel() {
-        // --- Helix terminal penalties (simplified example subset) ---
-        helixTerminal.put("helix_terminal_AUAA", -0.8);
-        helixTerminal.put("helix_terminal_AUAC", -1.0);
-        helixTerminal.put("helix_terminal_CGAA", -1.5);
-        // (...)
 
         // --- Hairpin energies ---
         hairpinEnergy.put(3, 5.4);
@@ -31,13 +31,23 @@ public class EnergyModel {
         hairpinEnergy.put(13, 6.8);
         hairpinEnergy.put(14, 6.9);
         hairpinEnergy.put(15, 6.9);
-        // (...)
 
         // --- Bulge energies ---
-        bulgeEnergy.put(1, 8.8);
-        bulgeEnergy.put(2, 8.8);
-        bulgeEnergy.put(3, 8.2);
-        // (...)
+        internalLoopEnergy.put(1, 8.8);
+        internalLoopEnergy.put(2, 8.8);
+        internalLoopEnergy.put(3, 8.2);
+        internalLoopEnergy.put(4, 5.6);
+        internalLoopEnergy.put(5, 5.7);
+        internalLoopEnergy.put(6, 5.4);
+        internalLoopEnergy.put(7, 6.0);
+        internalLoopEnergy.put(8, 5.5);
+        internalLoopEnergy.put(9, 6.4);
+        internalLoopEnergy.put(10, 6.5);
+        internalLoopEnergy.put(11, 6.6);
+        internalLoopEnergy.put(12, 6.7);
+        internalLoopEnergy.put(13, 6.8);
+        internalLoopEnergy.put(14, 6.9);
+        internalLoopEnergy.put(15, 6.9);
     }
 
     /** Base pair energy (Watson–Crick + wobble) */
@@ -47,32 +57,26 @@ public class EnergyModel {
         if ((a == 'G' && b == 'U') || (a == 'U' && b == 'G')) return -1.0;
         return INF;
     }
-
-    /** Add terminal stacking bonus/penalty */
-    public double terminalHelixEnergy(String tetramer) {
-        Double e = helixTerminal.get("helix_terminal_" + tetramer);
-        return e != null ? e : 0.0;
-    }
     
     /** Hairpin loop energy */
     public double hairpinEnergy(int loopSize) {
         if (loopSize < 3) return INF;
-        if (loopSize > 30) loopSize = 30;
+        if (loopSize > 15) loopSize = 15;
         return hairpinEnergy.get(loopSize);
     }
     
     public double stackEnergy(char i, char i1, char j1, char j) {
         double basePair = pairEnergy(i, j);
-        String tetramer = "" + i + i1 + j1 + j; // i i+1 j-1 j
+        String tetramer = "" + i + i1 + j1 + j;
         double terminal = terminalHelixEnergy(tetramer);
         return basePair + terminal;
     }
 
     /** Bulge loop penalty */
-    public double bulgePenalty(int loopSize) {
+    public double InternalLoopPenalty(int loopSize) {
         if (loopSize < 1) return INF;
-        if (loopSize > 30) loopSize = 30;
-        return bulgeEnergy.get(loopSize);
+        if (loopSize > 15) loopSize = 15;
+        return internalLoopEnergy.get(loopSize);
     }
 	
     /** Check pair compatibility */

@@ -54,8 +54,7 @@ public class DPFolding {
                     }
 
                     // stacked
-                    if (i + 1 < j - 1 && V[i + 1][j - 1] < INF
-                        && model.canPair(seq.charAt(i + 1), seq.charAt(j - 1))) {
+                    if (i + 1 < j - 1 && model.canPair(seq.charAt(i + 1), seq.charAt(j - 1))) {
                     	double stack = V[i + 1][j - 1]
                     	        + model.stackEnergy(seq.charAt(i), seq.charAt(i + 1), seq.charAt(j - 1), seq.charAt(j));
                         bestV = Math.min(bestV, stack);
@@ -66,7 +65,6 @@ public class DPFolding {
                     for (int i2 = i + 1; i2 <= j - MIN_LOOP - 1; i2++) {
                         for (int j2 = Math.max(i2 + MIN_LOOP + 1, i + 2); j2 < j; j2++) {
                             if (!model.canPair(seq.charAt(i2), seq.charAt(j2))) continue;
-                            if (V[i2][j2] >= INF) continue;
                             double eL = model.internalLoopPenalty(i - j);
                             bestInternal = Math.min(bestInternal, V[i2][j2] + eL);
                         }
@@ -74,7 +72,7 @@ public class DPFolding {
                     bestV = Math.min(bestV, bestInternal);
 
                     // multi-loop closed
-                    if (i + 1 <= j - 1 && WM[i + 1][j - 1] < INF) {
+                    if (i + 1 <= j - 1) {
                         bestV = Math.min(bestV, WM[i + 1][j - 1] + model.multiInit());
                     }
 
@@ -84,32 +82,28 @@ public class DPFolding {
                 // WM[i][j]
                 double bestWM = INF;
                 // i unpaired inside multi-loop
-                if (i + 1 <= j && WM[i + 1][j] < INF) {
+                if (i + 1 <= j) {
                     bestWM = Math.min(bestWM, WM[i + 1][j] + model.multiUnpaired());
                 }
                 // j unpaired inside multi-loop
-                if (i <= j - 1 && WM[i][j - 1] < INF) {
+                if (i <= j - 1) {
                     bestWM = Math.min(bestWM, WM[i][j - 1] + model.multiUnpaired());
                 }
                 // single branch: closing pair (i,j) forms a branch
-                if (V[i][j] < INF) {
-                    bestWM = Math.min(bestWM, V[i][j] + model.multiBranch());
-                }
+                
+                bestWM = Math.min(bestWM, V[i][j] + model.multiBranch());
+                
                 // split multi-loop into two WM regions
                 for (int k = i + 1; k < j; k++) {
-                    if (WM[i][k] < INF && WM[k + 1][j] < INF) {
-                        bestWM = Math.min(bestWM, WM[i][k] + WM[k + 1][j]);
-                    }
+                	bestWM = Math.min(bestWM, WM[i][k] + WM[k + 1][j]);
                 }
                 
                 WM[i][j] = bestWM;
 
                 double bestW = W[i][j - 1];
                 for (int k = i; k <= j - MIN_LOOP - 1; k++) {
-                    if (V[k][j] < INF) {
-                        double left = (k - 1 >= i) ? W[i][k - 1] : 0.0;
-                        bestW = Math.min(bestW, left + V[k][j]);
-                    }
+                	double left = (k - 1 >= i) ? W[i][k - 1] : 0.0;
+                	bestW = Math.min(bestW, left + V[k][j]);
                 }
                 W[i][j] = bestW;
             }
@@ -137,7 +131,6 @@ public class DPFolding {
             return;
         }
         for (int k = i; k <= j - MIN_LOOP - 1; k++) {
-            if (V[k][j] >= INF) continue;
             double left = (k - 1 >= i) ? W[i][k - 1] : 0.0;
             if (Math.abs(cur - (left + V[k][j])) < 1e-3) {
                 tracebackV(k, j, V, WM, seq, pairTo);
@@ -150,8 +143,6 @@ public class DPFolding {
 
     private void tracebackV(int i, int j, double[][] V, double[][] WM,
                             String seq, int[] pairTo) {
-        if (i >= j) return;
-        if (V[i][j] >= INF) return;
         pairTo[i] = j;
         pairTo[j] = i;
 
@@ -165,7 +156,7 @@ public class DPFolding {
             }
         }
 
-        if (i + 1 < j - 1 && V[i + 1][j - 1] < INF) {
+        if (i + 1 < j - 1) {
             double stack = V[i + 1][j - 1]
                     + model.stackEnergy(seq.charAt(i), seq.charAt(i + 1),
                                         seq.charAt(j - 1), seq.charAt(j));
@@ -179,10 +170,8 @@ public class DPFolding {
         for (int i2 = i + 1; i2 <= j - MIN_LOOP - 1; i2++) {
             for (int j2 = Math.max(i2 + MIN_LOOP + 1, i + 2); j2 < j; j2++) {
                 if (!model.canPair(seq.charAt(i2), seq.charAt(j2))) continue;
-                if (V[i2][j2] >= INF) continue;
                 double eL = model.internalLoopPenalty(i2-j2);
                 if (Math.abs(cur - (V[i2][j2] + eL)) < 1e-3) {
-                    // reconstruct inner pair
                     tracebackV(i2, j2, V, WM, seq, pairTo);
                     return;
                 }
@@ -190,7 +179,7 @@ public class DPFolding {
         }
 
         // multi-loop
-        if (i + 1 <= j - 1 && WM[i + 1][j - 1] < INF) {
+        if (i + 1 <= j - 1) {
             double multi = WM[i + 1][j - 1] + model.multiInit();
             if (Math.abs(cur - multi) < 1e-3) {
                 tracebackWM(i + 1, j - 1, WM, V, seq, pairTo);
@@ -202,20 +191,17 @@ public class DPFolding {
     private void tracebackWM(int i, int j, double[][] WM, double[][] V,
                              String seq, int[] pairTo) {
         if (i > j) return;
-        if (WM[i][j] >= INF) return;
         double cur = WM[i][j];
 
-        if (V[i][j] < INF) {
-            double cand = V[i][j] + model.multiBranch();
-            if (Math.abs(cur - cand) < 1e-3) {
-                tracebackV(i, j, V, WM, seq, pairTo);
-                return;
-            }
+        double cand = V[i][j] + model.multiBranch();
+        if (Math.abs(cur - cand) < 1e-3) {
+            tracebackV(i, j, V, WM, seq, pairTo);
+            return;
         }
 
         // i unpaired
-        if (i + 1 <= j && WM[i + 1][j] < INF) {
-            double cand = WM[i + 1][j] + model.multiUnpaired();
+        if (i + 1 <= j) {
+            cand = WM[i + 1][j] + model.multiUnpaired();
             if (Math.abs(cur - cand) < 1e-3) {
                 tracebackWM(i + 1, j, WM, V, seq, pairTo);
                 return;
@@ -223,8 +209,8 @@ public class DPFolding {
         }
 
         // j unpaired
-        if (i <= j - 1 && WM[i][j - 1] < INF) {
-            double cand = WM[i][j - 1] + model.multiUnpaired();
+        if (i <= j - 1) {
+            cand = WM[i][j - 1] + model.multiUnpaired();
             if (Math.abs(cur - cand) < 1e-3) {
                 tracebackWM(i, j - 1, WM, V, seq, pairTo);
                 return;
@@ -233,12 +219,10 @@ public class DPFolding {
 
         // split
         for (int k = i + 1; k < j; k++) {
-            if (WM[i][k] < INF && WM[k + 1][j] < INF) {
-                if (Math.abs(cur - (WM[i][k] + WM[k + 1][j])) < 1e-3) {
-                    tracebackWM(i, k, WM, V, seq, pairTo);
-                    tracebackWM(k + 1, j, WM, V, seq, pairTo);
-                    return;
-                }
+            if (Math.abs(cur - (WM[i][k] + WM[k + 1][j])) < 1e-3) {
+                tracebackWM(i, k, WM, V, seq, pairTo);
+                tracebackWM(k + 1, j, WM, V, seq, pairTo);
+                return;
             }
         }
     }

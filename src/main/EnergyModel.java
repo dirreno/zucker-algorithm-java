@@ -17,25 +17,22 @@ public class EnergyModel {
 
     public EnergyModel() {
 
-    	// 5'–A…3'/3'…U–5'
+    	// Stack
     	stack.put("AA/UU", -0.9);  stack.put("AC/UU", -1.1);  stack.put("AG/UU", -0.9);  stack.put("AU/UU", -0.9);
     	stack.put("AA/UC", -0.9);  stack.put("AC/UC", -1.8);  stack.put("AG/UC", -2.2);  stack.put("AU/UC", -0.1);
     	stack.put("AA/UG", -0.9);  stack.put("AC/UG", -1.3);  stack.put("AG/UG", -2.1);  stack.put("AU/UG", -0.6);
     	stack.put("AA/UA", -0.9);  stack.put("AC/UA", -1.1);  stack.put("AG/UA", -1.4);  stack.put("AU/UA", -0.1);
 
-    	// 5'–C…3'/3'…G–5'
     	stack.put("CA/UG", -2.1);  stack.put("CC/UG", -2.1);  stack.put("CG/UG", -3.3);  stack.put("CU/UG", -1.4);
     	stack.put("CA/UC", -2.1);  stack.put("CC/UC", -2.4);  stack.put("CG/UC", -2.1);  stack.put("CU/UC", -2.1);
     	stack.put("CA/UA", -2.1);  stack.put("CC/UA", -3.3);  stack.put("CG/UA", -2.4);  stack.put("CU/UA", -1.4);
     	stack.put("CA/UU", -2.1);  stack.put("CC/UU", -2.1);  stack.put("CG/UU", -2.1);  stack.put("CU/UU", -2.1);
 
-    	// 5'–G…3'/3'…C–5'
     	stack.put("GA/UC", -3.4);  stack.put("GC/UC", -3.3);  stack.put("GG/UC", -2.5);  stack.put("GU/UC", -1.5);
     	stack.put("GA/UG", -3.4);  stack.put("GC/UG", -3.3);  stack.put("GG/UG", -2.5);  stack.put("GU/UG", -1.5);
     	stack.put("GA/UA", -2.2);  stack.put("GC/UA", -2.5);  stack.put("GG/UA", -1.4);  stack.put("GU/UA", +1.3);
     	stack.put("GA/UU", -2.4);  stack.put("GC/UU", -2.5);  stack.put("GG/UU", -2.1);  stack.put("GU/UU", -0.5);
 
-    	// 5'–U…3'/3'…A–5'
     	stack.put("UA/UA", -1.3);  stack.put("UC/UA", -1.0);  stack.put("UG/UA", -1.0);  stack.put("UU/UA", -1.3);
     	stack.put("UA/UG", -2.4);  stack.put("UC/UG", -1.5);  stack.put("UG/UG", -1.0);  stack.put("UU/UG", -1.3);
     	stack.put("UA/UC", -2.1);  stack.put("UC/UC", -1.4);  stack.put("UG/UC", +0.3);  stack.put("UU/UC", -0.9);

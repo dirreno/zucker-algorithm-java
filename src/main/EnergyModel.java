@@ -42,7 +42,7 @@ public class EnergyModel {
     	stack.put("UA/UU", -0.9);  stack.put("UC/UU", -0.6);  stack.put("UG/UU", -0.5);  stack.put("UU/UU", -0.9);
 
 
-        // --- Hairpin energies ---
+        // Hairpin
         hairpinEnergy.put(3, 5.4);
         hairpinEnergy.put(4, 5.6);
         hairpinEnergy.put(5, 5.7);
@@ -57,7 +57,7 @@ public class EnergyModel {
         hairpinEnergy.put(14, 6.9);
         hairpinEnergy.put(15, 6.9);
 
-        // --- Internal loop energies ---
+        // Internal loop
         internalLoopEnergy.put(1, 1.2);
         internalLoopEnergy.put(2, 1.9);
         internalLoopEnergy.put(3, 5.6);
@@ -75,7 +75,6 @@ public class EnergyModel {
         internalLoopEnergy.put(15, 3.6);
     }
 
-    /** Base pair energy */
     public double pairEnergy(char a, char b) {
         if ((a == 'G' && b == 'C') || (a == 'C' && b == 'G')) return -3.0;
         if ((a == 'A' && b == 'U') || (a == 'U' && b == 'A')) return -2.0;
@@ -88,22 +87,18 @@ public class EnergyModel {
         return stack.getOrDefault(key, 0.0);
     }
     
-    /** Hairpin loop energy */
     public double hairpinEnergy(int loopSize) {
         if (loopSize < 3) return INF;
         if (loopSize > 15) loopSize = 15;
         return hairpinEnergy.get(loopSize);
     }
     
-    
-    /** Internal loop penalty */
     public double internalLoopPenalty(int loopSize) {
         if (loopSize < 1) return INF;
         if (loopSize > 15) loopSize = 15;
         return internalLoopEnergy.get(loopSize);
     }
 	
-    /** Check pair compatibility */
     public boolean canPair(char a, char b) {
         return pairEnergy(a, b) < INF / 2;
     }

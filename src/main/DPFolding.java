@@ -5,7 +5,6 @@ import java.util.Arrays;
 public class DPFolding {
     private static final int MIN_LOOP = 3;
     private static final double INF = 1e9;
-    private static final double EPS = 1e-6;
 
     private final EnergyModel model;
 
@@ -133,7 +132,7 @@ public class DPFolding {
         if (i == j) return;
         double cur = W[i][j];
         
-        if (Math.abs(cur - W[i][j - 1]) < EPS) {
+        if (Math.abs(cur - W[i][j - 1]) < 1e-3) {
             tracebackW(i, j - 1, W, V, WM, seq, pairTo);
             return;
         }
@@ -214,7 +213,7 @@ public class DPFolding {
             }
         }
 
-        // i unpaired inside multi-loop
+        // i unpaired
         if (i + 1 <= j && WM[i + 1][j] < INF) {
             double cand = WM[i + 1][j] + model.multiUnpaired();
             if (Math.abs(cur - cand) < 1e-3) {
@@ -223,7 +222,7 @@ public class DPFolding {
             }
         }
 
-        // j unpaired inside multi-loop
+        // j unpaired
         if (i <= j - 1 && WM[i][j - 1] < INF) {
             double cand = WM[i][j - 1] + model.multiUnpaired();
             if (Math.abs(cur - cand) < 1e-3) {

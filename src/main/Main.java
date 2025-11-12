@@ -3,12 +3,11 @@ package main;
 
 public class Main {
     public static void main(String[] args) {
-        DPFolding2 folding = new DPFolding2(new EnergyModel());
+        DPFolding folding = new DPFolding(new EnergyModel());
 
         String[] sequences = {
-            "GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA",
-            "GCAAUUGC",
-            "GGGAAAUCC"
+        		"GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA",
+        		"UUCUUUUUUAGUGGCAGUAAGCCUGGGAAUGGGGGCGACCCAGGCGUAUGAACAUAGUGUAACGCUCCCC"
         };
 
         for (String seq : sequences) {

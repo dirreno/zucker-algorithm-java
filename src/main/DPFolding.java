@@ -5,6 +5,7 @@ import java.util.Arrays;
 public class DPFolding {
     private static final int MIN_LOOP = 3;
     private static final double INF = 1e9;
+    private static final double EPS = 1e-6;
 
     private final EnergyModel model;
 
@@ -12,82 +13,246 @@ public class DPFolding {
         this.model = model;
     }
 
-    public Result recurrence(String seq) {
-        seq = seq.toUpperCase().replaceAll("\\s+", "");
+    public Result fold(String seqIn) {
+        String seq = seqIn.toUpperCase().replaceAll("\\s+", "");
         final int n = seq.length();
+        if (n == 0) return new Result("", 0.0, new int[0]);
 
-        double[][] dp = new double[n][n];
-        int[][] action = new int[n][n];
-        int[][] actionIdx = new int[n][n];
+        double[][] W = new double[n][n];
+        double[][] V = new double[n][n];
+        double[][] WM = new double[n][n];
+        
 
-        for (double[] row : dp) Arrays.fill(row, INF);
-        for (int i = 0; i < n; i++) dp[i][i] = 0.0;
+        for (int i = 0; i < n; i++) {
+            Arrays.fill(W[i], INF);
+            Arrays.fill(V[i], INF);
+            Arrays.fill(WM[i], INF);
+        }
+
+        for (int i = 0; i < n; i++) {
+            W[i][i] = 0.0;
+        }
 
         for (int len = 2; len <= n; len++) {
             for (int i = 0; i + len - 1 < n; i++) {
                 int j = i + len - 1;
-                double best = INF;
-                int bestAction = 0;
-                int bestIdx = -1;
+                if (j - i < MIN_LOOP) {
+                    W[i][j] = 0.0;
+                    continue;
+                }
 
-                // j unpaired
-                double opt1 = (j - 1 >= i) ? dp[i][j - 1] : 0.0;
-                if (opt1 < best) { best = opt1; bestAction = 1; }
+                // V[i][j]
+                if (model.canPair(seq.charAt(i), seq.charAt(j))) {
+                    double bestV = INF;
 
-                // j paired with k
+                    // hairpin: loop size = j - i - 1
+                    int loopSize = j - i - 1;
+                    if (loopSize >= MIN_LOOP) {
+                        double hp = model.hairpinEnergy(loopSize);
+                        double closePair = model.pairEnergy(seq.charAt(i), seq.charAt(j));
+                        double hairpinTotal = hp + closePair;
+                        bestV = Math.min(bestV, hairpinTotal);
+                    }
+
+                    // stacked pair: (i+1, j-1) exists and paired
+                    if (i + 1 < j - 1 && V[i + 1][j - 1] < INF/2
+                        && model.canPair(seq.charAt(i + 1), seq.charAt(j - 1))) {
+                    	double stack = V[i + 1][j - 1]
+                    	        + model.stackEnergy(seq.charAt(i), seq.charAt(i + 1), seq.charAt(j - 1), seq.charAt(j));
+                        bestV = Math.min(bestV, stack);
+                    }
+
+                    // internal loops: find an inner closing pair (i2,j2)
+                    double bestInternal = INF;
+                    for (int i2 = i + 1; i2 <= j - MIN_LOOP - 1; i2++) {
+                        for (int j2 = Math.max(i2 + MIN_LOOP + 1, i + 2); j2 < j; j2++) {
+                            if (!model.canPair(seq.charAt(i2), seq.charAt(j2))) continue;
+                            if (V[i2][j2] >= INF/2) continue;
+                            double eL = model.internalLoopPenalty(i - j);
+                            bestInternal = Math.min(bestInternal, V[i2][j2] + eL);
+                        }
+                    }
+                    bestV = Math.min(bestV, bestInternal);
+
+                    // multi-loop closed by (i,j): WM[i+1][j-1] + a
+                    if (i + 1 <= j - 1 && WM[i + 1][j - 1] < INF/2) {
+                        bestV = Math.min(bestV, WM[i + 1][j - 1] + model.multiInit());
+                    }
+
+                    V[i][j] = bestV;
+                }
+
+                // WM[i][j]
+                double bestWM = INF;
+                // i unpaired inside multi-loop
+                if (i + 1 <= j && WM[i + 1][j] < INF/2) {
+                    bestWM = Math.min(bestWM, WM[i + 1][j] + model.multiUnpaired());
+                }
+                // j unpaired inside multi-loop
+                if (i <= j - 1 && WM[i][j - 1] < INF/2) {
+                    bestWM = Math.min(bestWM, WM[i][j - 1] + model.multiUnpaired());
+                }
+                // single branch: closing pair (i,j) forms a branch
+                if (V[i][j] < INF/2) {
+                    bestWM = Math.min(bestWM, V[i][j] + model.multiBranch());
+                }
+                // split multi-loop into two WM regions
+                for (int k = i + 1; k < j; k++) {
+                    if (WM[i][k] < INF/2 && WM[k + 1][j] < INF/2) {
+                        bestWM = Math.min(bestWM, WM[i][k] + WM[k + 1][j]);
+                    }
+                }
+                
+                WM[i][j] = bestWM;
+
+                // W[i][j]
+                double bestW = W[i][j - 1];
+                // split: W[i][k-1] + V[k][j]
                 for (int k = i; k <= j - MIN_LOOP - 1; k++) {
-                    char ak = seq.charAt(k), aj = seq.charAt(j);
-                    if (!model.canPair(ak, aj)) continue;
-
-                    double ePair = model.pairEnergy(ak, aj);
-                    
-                    double loopSize = j - k - 1;
-                    double total = ((k - 1 >= i) ? dp[i][k - 1] : 0.0)
-                                 + ePair
-                                 + (loopSize <= MIN_LOOP ? model.hairpinEnergy((int) loopSize) : dp[k + 1][j - 1]);
-
-                    if (total < best) { best = total; bestAction = 2; bestIdx = k; }
+                    if (V[k][j] < INF/2) {
+                        double left = (k - 1 >= i) ? W[i][k - 1] : 0.0;
+                        bestW = Math.min(bestW, left + V[k][j]);
+                    }
                 }
-
-                // split
-                for (int t = i; t < j; t++) {
-                    double total = dp[i][t] + dp[t + 1][j];
-                    if (total < best) { best = total; bestAction = 3; bestIdx = t; }
-                }
-
-                dp[i][j] = best;
-                action[i][j] = bestAction;
-                actionIdx[i][j] = bestIdx;
+                W[i][j] = bestW;
             }
         }
 
+        // Traceback
         int[] pairTo = new int[n];
         Arrays.fill(pairTo, -1);
-        if (n > 0) traceback(0, n - 1, action, actionIdx, pairTo, seq);
+        tracebackW(0, n - 1, W, V, WM, seq, pairTo);
 
         String dotBracket = toDotBracket(pairTo);
-        double mfe = (n > 0) ? dp[0][n - 1] : 0.0;
-
+        double mfe = W[0][n - 1];
         return new Result(dotBracket, mfe, pairTo);
     }
 
-    private void traceback(int i, int j, int[][] action, int[][] idx, int[] pairTo, String seq) {
+    // Traceback for W
+    private void tracebackW(int i, int j, double[][] W, double[][] V, double[][] WM,
+                            String seq, int[] pairTo) {
+        if (i > j) return;
+        if (i == j) return;
+        double cur = W[i][j];
+        // j unpaired?
+        if (Math.abs(cur - W[i][j - 1]) < EPS) {
+            tracebackW(i, j - 1, W, V, WM, seq, pairTo);
+            return;
+        }
+        // otherwise find k where cur == left + V[k][j]
+        for (int k = i; k <= j - MIN_LOOP - 1; k++) {
+            if (V[k][j] >= INF/2) continue;
+            double left = (k - 1 >= i) ? W[i][k - 1] : 0.0;
+            if (Math.abs(cur - (left + V[k][j])) < 1e-3) {
+                // reconstruct the V[k][j] region and left part
+                tracebackV(k, j, V, WM, seq, pairTo);
+                if (k - 1 >= i) tracebackW(i, k - 1, W, V, WM, seq, pairTo);
+                return;
+            }
+        }
+        // fallback: nothing matched, try shrinking the interval
+        tracebackW(i, j - 1, W, V, WM, seq, pairTo);
+    }
+
+    // Traceback for V (closed by (i,j))
+    private void tracebackV(int i, int j, double[][] V, double[][] WM,
+                            String seq, int[] pairTo) {
         if (i >= j) return;
-        int act = action[i][j];
-        switch (act) {
-            case 1 -> traceback(i, j - 1, action, idx, pairTo, seq);
-            case 2 -> {
-                int k = idx[i][j];
-                pairTo[k] = j; pairTo[j] = k;
-                if (k - 1 >= i) traceback(i, k - 1, action, idx, pairTo, seq);
-                if (k + 1 <= j - 1) traceback(k + 1, j - 1, action, idx, pairTo, seq);
+        if (V[i][j] >= INF/2) return;
+        pairTo[i] = j;
+        pairTo[j] = i;
+
+        double cur = V[i][j];
+
+        // hairpin?
+        int loopSize = j - i - 1;
+        if (loopSize >= MIN_LOOP) {
+            double hairpin = model.hairpinEnergy(loopSize);
+            if (Math.abs(cur - hairpin) < 1e-3) {
+                // hairpin closed by (i,j) — nothing inside
+                return;
             }
-            case 3 -> {
-                int t = idx[i][j];
-                traceback(i, t, action, idx, pairTo, seq);
-                traceback(t + 1, j, action, idx, pairTo, seq);
+        }
+
+        // stacked?
+        if (i + 1 < j - 1 && V[i + 1][j - 1] < INF/2) {
+            double stack = V[i + 1][j - 1]
+                    + model.stackEnergy(seq.charAt(i), seq.charAt(i + 1),
+                                        seq.charAt(j - 1), seq.charAt(j));
+            if (Math.abs(cur - stack) < 1e-3) {
+                // stacked pair: continue inside
+                tracebackV(i + 1, j - 1, V, WM, seq, pairTo);
+                return;
             }
-            default -> { if (j - 1 >= i) traceback(i, j - 1, action, idx, pairTo, seq); }
+        }
+
+        // internal loop case: find inner pair (i2,j2)
+        for (int i2 = i + 1; i2 <= j - MIN_LOOP - 1; i2++) {
+            for (int j2 = Math.max(i2 + MIN_LOOP + 1, i + 2); j2 < j; j2++) {
+                if (!model.canPair(seq.charAt(i2), seq.charAt(j2))) continue;
+                if (V[i2][j2] >= INF/2) continue;
+                double eL = model.internalLoopPenalty(i2-j2);
+                if (Math.abs(cur - (V[i2][j2] + eL)) < 1e-3) {
+                    // reconstruct inner pair
+                    tracebackV(i2, j2, V, WM, seq, pairTo);
+                    return;
+                }
+            }
+        }
+
+        // multi-loop closure: V[i][j] == WM[i+1][j-1] + a
+        if (i + 1 <= j - 1 && WM[i + 1][j - 1] < INF/2) {
+            double multi = WM[i + 1][j - 1] + model.multiInit();
+            if (Math.abs(cur - multi) < 1e-3) {
+                tracebackWM(i + 1, j - 1, WM, V, seq, pairTo);
+                return;
+            }
+        }
+    }
+
+    // Traceback for WM (multi-loop interior)
+    private void tracebackWM(int i, int j, double[][] WM, double[][] V,
+                             String seq, int[] pairTo) {
+        if (i > j) return;
+        if (WM[i][j] >= INF/2) return;
+        double cur = WM[i][j];
+
+        // V[i][j] + b ?
+        if (V[i][j] < INF/2) {
+            double cand = V[i][j] + model.multiBranch();
+            if (Math.abs(cur - cand) < 1e-3) {
+                tracebackV(i, j, V, WM, seq, pairTo);
+                return;
+            }
+        }
+
+        // i unpaired inside multi-loop
+        if (i + 1 <= j && WM[i + 1][j] < INF/2) {
+            double cand = WM[i + 1][j] + model.multiUnpaired();
+            if (Math.abs(cur - cand) < 1e-3) {
+                tracebackWM(i + 1, j, WM, V, seq, pairTo);
+                return;
+            }
+        }
+
+        // j unpaired inside multi-loop
+        if (i <= j - 1 && WM[i][j - 1] < INF/2) {
+            double cand = WM[i][j - 1] + model.multiUnpaired();
+            if (Math.abs(cur - cand) < 1e-3) {
+                tracebackWM(i, j - 1, WM, V, seq, pairTo);
+                return;
+            }
+        }
+
+        // split
+        for (int k = i + 1; k < j; k++) {
+            if (WM[i][k] < INF/2 && WM[k + 1][j] < INF/2) {
+                if (Math.abs(cur - (WM[i][k] + WM[k + 1][j])) < 1e-3) {
+                    tracebackWM(i, k, WM, V, seq, pairTo);
+                    tracebackWM(k + 1, j, WM, V, seq, pairTo);
+                    return;
+                }
+            }
         }
     }
 
@@ -99,5 +264,4 @@ public class DPFolding {
         }
         return sb.toString();
     }
-
-}   
+}

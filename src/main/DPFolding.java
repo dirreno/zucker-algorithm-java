@@ -74,7 +74,7 @@ public class DPFolding {
                     }
                     bestV = Math.min(bestV, bestInternal);
 
-                    // multi-loop closed by (i,j): WM[i+1][j-1] + a
+                    // multi-loop closed
                     if (i + 1 <= j - 1 && WM[i + 1][j - 1] < INF) {
                         bestV = Math.min(bestV, WM[i + 1][j - 1] + model.multiInit());
                     }
@@ -200,7 +200,6 @@ public class DPFolding {
         }
     }
 
-    // Traceback for WM
     private void tracebackWM(int i, int j, double[][] WM, double[][] V,
                              String seq, int[] pairTo) {
         if (i > j) return;

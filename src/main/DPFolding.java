@@ -1,6 +1,6 @@
 package main;
 
-import java.util.Arrays;
+import java.util.*;
 
 public class DPFolding {
     private static final int MIN_LOOP = 3;
@@ -15,7 +15,6 @@ public class DPFolding {
     public Result fold(String seqIn) {
         String seq = seqIn.toUpperCase().replaceAll("\\s+", "");
         final int n = seq.length();
-        if (n == 0) return new Result("", 0.0, new int[0]);
 
         double[][] W = new double[n][n];
         double[][] V = new double[n][n];
@@ -26,10 +25,6 @@ public class DPFolding {
             Arrays.fill(W[i], INF);
             Arrays.fill(V[i], INF);
             Arrays.fill(WM[i], INF);
-        }
-
-        for (int i = 0; i < n; i++) {
-            W[i][i] = 0.0;
         }
 
         for (int len = 2; len <= n; len++) {
@@ -81,19 +76,19 @@ public class DPFolding {
 
                 // WM[i][j]
                 double bestWM = INF;
-                // i unpaired inside multi-loop
+                // i unpaired
                 if (i + 1 <= j) {
                     bestWM = Math.min(bestWM, WM[i + 1][j] + model.multiUnpaired());
                 }
-                // j unpaired inside multi-loop
+                // j unpaired
                 if (i <= j - 1) {
                     bestWM = Math.min(bestWM, WM[i][j - 1] + model.multiUnpaired());
                 }
-                // single branch: closing pair (i,j) forms a branch
+                // single branch
                 
                 bestWM = Math.min(bestWM, V[i][j] + model.multiBranch());
                 
-                // split multi-loop into two WM regions
+                // split
                 for (int k = i + 1; k < j; k++) {
                 	bestWM = Math.min(bestWM, WM[i][k] + WM[k + 1][j]);
                 }
@@ -178,7 +173,7 @@ public class DPFolding {
             }
         }
 
-        // multi-loop
+        // multiloop
         if (i + 1 <= j - 1) {
             double multi = WM[i + 1][j - 1] + model.multiInit();
             if (Math.abs(cur - multi) < 1e-3) {
@@ -234,5 +229,14 @@ public class DPFolding {
             sb.append(p == -1 ? '.' : (p > i ? '(' : ')'));
         }
         return sb.toString();
+    }
+
+    
+    public static int distance(String s1, String s2) {
+        int diff = 0;
+        for (int i = 0; i < s1.length(); i++) {
+            if (s1.charAt(i) != s2.charAt(i)) diff++;
+        }
+        return diff;
     }
 }

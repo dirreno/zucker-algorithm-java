@@ -1,6 +1,9 @@
 package main;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +14,14 @@ public class Main {
     public static void main(String[] args) {
         DPFolding folding = new DPFolding(new EnergyModel(),3);
         String[] sequences = fastaToString("data/rnas.fasta");
+        String outputFilename = "data/structures_output.txt";
+        java.io.File outputFile = new java.io.File(outputFilename);
+        if (outputFile.getParentFile() != null) outputFile.getParentFile().mkdirs();
+        try (FileWriter fw = new FileWriter(outputFile, false)) {
+            // truncate file at start of run
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         for (String seq : sequences) {
             long start = System.currentTimeMillis();
             folding.recurrence(seq);
@@ -21,6 +32,11 @@ public class Main {
             System.out.printf("Processing time: %d ms%n", ms);
             System.out.println(result);
             System.out.println();
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append(result.getStructure()).append(System.lineSeparator());
+            String outStr = sb.toString();
+            saveStructure(outputFilename, outStr);
         }
     }
 
@@ -44,5 +60,15 @@ public class Main {
             return new String[0];
         }
         return seqs.toArray(new String[0]);
+    }
+    
+    public static void saveStructure(String filename, String content) {
+        java.io.File outFile = new java.io.File(filename);
+        if (outFile.getParentFile() != null) outFile.getParentFile().mkdirs();
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(outFile, true))) {
+            out.write(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -1,9 +1,9 @@
 package main;
 
 public class Result {
-	public final String structure;
-    public final double mfe;
-    public final int[] pairTo;
+	public String structure;
+    public double mfe;
+    public int[] pairTo;
 
     public Result(String structure, double mfe, int[] pairTo) {
         this.structure = structure;
@@ -24,4 +24,16 @@ public class Result {
         }
         return sb.toString();
     }
+
+	public String getStructure() {
+		return structure;
+	}
+
+	public double getMfe() {
+		return mfe;
+	}
+
+	public int[] getPairTo() {
+		return pairTo;
+	}
 }

@@ -6,6 +6,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import htsjdk.samtools.reference.FastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
@@ -37,13 +39,18 @@ public class Main {
             String outStr = sb.toString();
             saveStructure(outputFilename, outStr);
         }
+        
+        compareFiles("data/structures_output.txt","data/real_structure.txt");
+        compareFiles("data/mxfold2_structures.txt","data/real_structure.txt");
     }
 
     public static int distance(String s1, String s2) {
         int diff = 0;
-        for (int i = 0; i < s1.length(); i++) {
+        int min = Math.min(s1.length(), s2.length());
+        for (int i = 0; i < min; i++) {
             if (s1.charAt(i) != s2.charAt(i)) diff++;
         }
+        diff += Math.abs(s1.length() - s2.length());
         return diff;
     }
     
@@ -69,5 +76,23 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    
+    public static List<Integer> compareFiles(String file1, String file2) {
+        List<Integer> distances = new ArrayList<>();
+        try {
+            List<String> lines1 = Files.readAllLines(Paths.get(file1));
+            List<String> lines2 = Files.readAllLines(Paths.get(file2));
+            for (int i = 0; i < lines1.size(); i++) {
+                String a = lines1.get(i);
+                String b = lines2.get(i);
+                distances.add(distance(a, b));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println(distances);
+        return distances;
     }
 }

@@ -11,9 +11,9 @@ public class EnergyModel {
     public double multiUnpaired() { return -0.05; }
 
 
-    private final Map<Integer, Double> hairpinEnergy = new HashMap<>();
-    private final Map<Integer, Double> internalLoopEnergy = new HashMap<>();
-    private final Map<String, Double> stack = new HashMap<>();
+    private Map<Integer, Double> hairpinEnergy = new HashMap<>();
+    private Map<Integer, Double> internalLoopEnergy = new HashMap<>();
+    private Map<String, Double> stack = new HashMap<>();
 
     public EnergyModel() {
 

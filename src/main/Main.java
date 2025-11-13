@@ -18,7 +18,6 @@ public class Main {
         java.io.File outputFile = new java.io.File(outputFilename);
         if (outputFile.getParentFile() != null) outputFile.getParentFile().mkdirs();
         try (FileWriter fw = new FileWriter(outputFile, false)) {
-            // truncate file at start of run
         } catch (IOException e) {
             e.printStackTrace();
         }

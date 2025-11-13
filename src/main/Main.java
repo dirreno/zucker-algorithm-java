@@ -6,21 +6,26 @@ public class Main {
         DPFolding folding = new DPFolding(new EnergyModel(),3);
 
         String[] sequences = {
-        		"GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA",
-        		"UUCUUUUUUAGUGGCAGUAAGCCUGGGAAUGGGGGCGACCCAGGCGUAUGAACAUAGUGUAACGCUCCCC",
+            "GCGGAUUUAGCUCAGUUGGGAGAGCGCCAGACUGAAGAUCUGGAGGUCCUGUGUUCGAUCCACAGAAUUCGCACCA",
+            "UUCUUUUUUAGUGGCAGUAAGCCUGGGAAUGGGGGCGACCCAGGCGUAUGAACAUAGUGUAACGCUCCCC"
         };
-
-        Result previous = null;
         for (String seq : sequences) {
-            Result result = folding.recurrence(seq);
+        	folding.recurrence(seq);
+            Result result = folding.getResult();
             System.out.println("Sequence : " + seq);
             System.out.println(result);
-            if (previous != null) {
-                int d = Result.distance(previous.structure, result.structure);
-                System.out.println("Distance to previous structure: " + d);
-            }
             System.out.println();
-            previous = result;
         }
+    }
+
+    // Hamming distance: requires equal-length strings
+    public static int distance(String s1, String s2) {
+        if (s1 == null || s2 == null) throw new IllegalArgumentException("Inputs must be non-null");
+        if (s1.length() != s2.length()) throw new IllegalArgumentException("Hamming distance requires equal-length strings");
+        int diff = 0;
+        for (int i = 0; i < s1.length(); i++) {
+            if (s1.charAt(i) != s2.charAt(i)) diff++;
+        }
+        return diff;
     }
 }

@@ -18,7 +18,6 @@ public class Main {
         }
     }
 
-    // Hamming distance: requires equal-length strings
     public static int distance(String s1, String s2) {
         if (s1 == null || s2 == null) throw new IllegalArgumentException("Inputs must be non-null");
         if (s1.length() != s2.length()) throw new IllegalArgumentException("Hamming distance requires equal-length strings");

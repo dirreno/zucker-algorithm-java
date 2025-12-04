@@ -62,7 +62,7 @@ public class DPFolding {
                     for (int i2 = i + 1; i2 <= j - minLoop - 1; i2++) {
                         for (int j2 = Math.max(i2 + minLoop + 1, i + 2); j2 < j; j2++) {
                             if (!model.canPair(seq.charAt(i2), seq.charAt(j2))) continue;
-                            double eL = model.internalLoopPenalty(i - j);
+                            double eL =  model.internalLoopPenalty((i2 - i - 1) + (j - j2 - 1));
                             bestInternal = Math.min(bestInternal, V[i2][j2] + eL);
                         }
                     }
@@ -74,6 +74,7 @@ public class DPFolding {
                     }
 
                     V[i][j] = bestV;
+                    
                 }
 
                 // WM[i][j]
@@ -103,6 +104,7 @@ public class DPFolding {
                 	bestW = Math.min(bestW, left + V[k][j]);
                 }
                 W[i][j] = bestW;
+                
             }
         }
 
@@ -147,7 +149,9 @@ public class DPFolding {
         int loopSize = j - i - 1;
         if (loopSize >= minLoop) {
             double hairpin = model.hairpinEnergy(loopSize);
-            if (Math.abs(cur - hairpin) < 1e-3) {
+            double closePair = model.pairEnergy(seq.charAt(i), seq.charAt(j));
+            double hairpinTotal = hairpin + closePair;
+            if (Math.abs(cur - hairpinTotal) < 1e-3) {
                 return;
             }
         }
@@ -166,7 +170,7 @@ public class DPFolding {
         for (int i2 = i + 1; i2 <= j - minLoop - 1; i2++) {
             for (int j2 = Math.max(i2 + minLoop + 1, i + 2); j2 < j; j2++) {
                 if (!model.canPair(seq.charAt(i2), seq.charAt(j2))) continue;
-                double eL = model.internalLoopPenalty(i2-j2);
+                double eL = model.internalLoopPenalty((i2 - i - 1) + (j - j2 - 1));
                 if (Math.abs(cur - (V[i2][j2] + eL)) < 1e-3) {
                     tracebackV(i2, j2, V, WM, seq, pairTo);
                     return;

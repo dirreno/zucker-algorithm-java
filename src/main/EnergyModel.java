@@ -23,7 +23,7 @@ public class EnergyModel {
     	stack.put("AA/UG", -0.9);  stack.put("AC/UG", -1.3);  stack.put("AG/UG", -2.1);  stack.put("AU/UG", -0.6);
     	stack.put("AA/UA", -0.9);  stack.put("AC/UA", -1.1);  stack.put("AG/UA", -1.4);  stack.put("AU/UA", -0.1);
 
-    	stack.put("CA/UG", -2.1);  stack.put("CC/UG", -2.1);  stack.put("CG/UG", -3.3);  stack.put("CU/UG", -1.4);
+    	stack.put("CA/UG", -2.1);  stack.put("CC/UG", -2.1);  stack.put("CG/UG", -0.9);  stack.put("CU/UG", -1.4);
     	stack.put("CA/UC", -2.1);  stack.put("CC/UC", -2.4);  stack.put("CG/UC", -2.1);  stack.put("CU/UC", -2.1);
     	stack.put("CA/UA", -2.1);  stack.put("CC/UA", -3.3);  stack.put("CG/UA", -2.4);  stack.put("CU/UA", -1.4);
     	stack.put("CA/UU", -2.1);  stack.put("CC/UU", -2.1);  stack.put("CG/UU", -2.1);  stack.put("CU/UU", -2.1);
@@ -37,6 +37,9 @@ public class EnergyModel {
     	stack.put("UA/UG", -2.4);  stack.put("UC/UG", -1.5);  stack.put("UG/UG", -1.0);  stack.put("UU/UG", -1.3);
     	stack.put("UA/UC", -2.1);  stack.put("UC/UC", -1.4);  stack.put("UG/UC", +0.3);  stack.put("UU/UC", -0.9);
     	stack.put("UA/UU", -0.9);  stack.put("UC/UU", -0.6);  stack.put("UG/UU", -0.5);  stack.put("UU/UU", -0.9);
+
+        stack.put("GG/CC", -2.5);
+        stack.put("GC/GC", -3.3);
 
 
         // Hairpin
